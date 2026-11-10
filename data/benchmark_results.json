@@ -1,0 +1,24 @@
+{
+  "transactions_evaluated": 1000,
+  "total_benchmark_time_seconds": 0.956,
+  "overall_throughput_tps": 1045.59,
+  "gpu_inference_metrics": {
+    "device": "NVIDIA GeForce RTX 4050 Laptop GPU",
+    "is_cuda": true,
+    "p50_latency_us": 542.05,
+    "p95_latency_us": 1003.82,
+    "p99_latency_us": 1464.89,
+    "mean_latency_us": 634.76
+  },
+  "end_to_end_pipeline_metrics": {
+    "p50_latency_us": 810.05,
+    "p95_latency_us": 1549.4,
+    "p99_latency_us": 2210.02,
+    "mean_latency_us": 945.55
+  },
+  "decision_distribution": {
+    "APPROVED": 489,
+    "FLAGGED_FOR_REVIEW": 368,
+    "BLOCKED": 143
+  }
+}
