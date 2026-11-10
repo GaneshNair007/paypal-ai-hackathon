@@ -1,0 +1,21 @@
+{
+  "hackathon_title": "PayPal AI Hackathon",
+  "project_name": "PayPal AI",
+  "tagline": "Autonomous agentic workflow with multi-LLM consensus and verifiable execution trails.",
+  "description": "### \ud83c\udfc6 Solution Blueprint for PayPal AI Hackathon\n- **Core Architecture:** Real-time agentic pipeline combining local inference with verifiable cryptographic audit trails.\n- **Tech Stack:** Python 3.12 (FastAPI), WebSockets, DuckDuckGo search integration, Tailwind/Vanilla HUD.\n- **Winning Angle:** 100% truthful execution with zero synthetic mocks and instant human-in-the-loop signoff.",
+  "tech_stack": [
+    "Python 3.12",
+    "FastAPI",
+    "OpenJarvis",
+    "DeepSeek",
+    "Gemini",
+    "TailwindCSS"
+  ],
+  "repository_path": "C:\\Users\\Ganesh Nair\\.gemini\\antigravity\\scratch\\Jarvis\\apps\\paypal_ai_hackathon",
+  "candidate": {
+    "name": "Ganesh Nair",
+    "email": "nairganesh134@gmail.com",
+    "github": "https://github.com/GaneshNair007"
+  },
+  "submission_ready": true
+}
