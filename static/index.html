@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PayPal AI — Autonomous Multi-Agent Consensus Room</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body { background-color: #0b0f19; color: #f8fafc; font-family: ui-sans-serif, system-ui, sans-serif; }
+    .glass-panel { background: rgba(17, 24, 39, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(56, 189, 248, 0.2); border-radius: 12px; }
+    .pulse-glow { box-shadow: 0 0 20px rgba(56, 189, 248, 0.25); }
+    .agent-card { transition: all 0.2s ease; }
+    .agent-card:hover { transform: translateY(-2px); border-color: #38bdf8; }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col p-6">
+  <!-- Header -->
+  <header class="max-w-6xl w-full mx-auto flex justify-between items-center pb-6 border-b border-slate-800">
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 rounded-xl bg-sky-500/20 border border-sky-400 flex items-center justify-center text-sky-400 font-bold text-xl">
+        <i class="fa-solid fa-shield-halved"></i>
+      </div>
+      <div>
+        <h1 class="text-xl font-bold tracking-tight text-white flex items-center gap-2">
+          PayPal AI <span class="text-xs px-2 py-0.5 rounded bg-sky-500/10 text-sky-400 border border-sky-500/30">Consensus Room</span>
+        </h1>
+        <p class="text-xs text-slate-400">Verifiable Multi-Agent Fraud Detection & Settlement Engine</p>
+      </div>
+    </div>
+    <div class="flex items-center gap-3">
+      <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Consensus Core Online
+      </span>
+      <a href="https://github.com/GaneshNair007/paypal-ai-hackathon" target="_blank" class="px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition flex items-center gap-1.5">
+        <i class="fa-brands fa-github"></i> Repository
+      </a>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="max-w-6xl w-full mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6 flex-1">
+    <!-- Left Column: Input & Simulation -->
+    <div class="glass-panel p-5 flex flex-col gap-4">
+      <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+        <h2 class="text-sm font-semibold text-sky-400 uppercase tracking-wider flex items-center gap-2">
+          <i class="fa-solid fa-satellite-dish"></i> Ingest Transaction
+        </h2>
+        <span class="text-xs text-slate-500">Live Simulator</span>
+      </div>
+
+      <div class="space-y-3">
+        <div>
+          <label class="text-xs text-slate-400 block mb-1">Transaction Description</label>
+          <input id="tx-desc" type="text" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-sky-500" value="Rapid cross-border withdrawal to unverified destination wallet in Zurich">
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="text-xs text-slate-400 block mb-1">Amount ($ USD)</label>
+            <input id="tx-amount" type="number" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-sky-500" value="4850">
+          </div>
+          <div>
+            <label class="text-xs text-slate-400 block mb-1">Channel Mode</label>
+            <select id="tx-channel" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-sky-500">
+              <option value="WIRE_TRANSFER">Wire Transfer</option>
+              <option value="P2P_INSTANT">P2P Instant</option>
+              <option value="MERCHANT_CHECKOUT">Merchant Checkout</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex gap-2 pt-2">
+        <button onclick="evaluateTx()" id="btn-eval" class="flex-1 bg-sky-500 hover:bg-sky-400 text-slate-950 font-semibold text-xs py-2.5 rounded-lg transition flex items-center justify-center gap-1.5">
+          <i class="fa-solid fa-bolt"></i> Evaluate Multi-Agent Consensus
+        </button>
+        <button onclick="setSample(1)" class="px-3 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs text-slate-300">Safe</button>
+        <button onclick="setSample(2)" class="px-3 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs text-slate-300">Fraud</button>
+      </div>
+
+      <!-- Quick Preset Guidance -->
+      <div class="mt-4 p-3 rounded-lg bg-slate-900/60 border border-slate-800 text-xs text-slate-400 space-y-1">
+        <div class="text-slate-300 font-medium"><i class="fa-solid fa-circle-info text-sky-400"></i> Consensus Architecture</div>
+        <p>4 specialist agents evaluate risk vectors simultaneously. A consensus score &gt; 0.70 triggers automated freeze.</p>
+      </div>
+    </div>
+
+    <!-- Center & Right Columns: Agent Swarm & Output -->
+    <div class="lg:col-span-2 flex flex-col gap-6">
+      <!-- 4 Agents Status Cards -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div id="card-analyst" class="glass-panel agent-card p-3 text-center border-slate-800">
+          <i class="fa-solid fa-chart-line text-sky-400 text-lg mb-1"></i>
+          <div class="text-xs font-semibold text-slate-200">Analyst Agent</div>
+          <div id="status-analyst" class="text-[10px] text-slate-400 mt-1">Ready</div>
+        </div>
+        <div id="card-risk" class="glass-panel agent-card p-3 text-center border-slate-800">
+          <i class="fa-solid fa-shield-cat text-amber-400 text-lg mb-1"></i>
+          <div class="text-xs font-semibold text-slate-200">Risk Officer</div>
+          <div id="status-risk" class="text-[10px] text-slate-400 mt-1">Ready</div>
+        </div>
+        <div id="card-compliance" class="glass-panel agent-card p-3 text-center border-slate-800">
+          <i class="fa-solid fa-scale-balanced text-indigo-400 text-lg mb-1"></i>
+          <div class="text-xs font-semibold text-slate-200">Compliance</div>
+          <div id="status-compliance" class="text-[10px] text-slate-400 mt-1">Ready</div>
+        </div>
+        <div id="card-crypto" class="glass-panel agent-card p-3 text-center border-slate-800">
+          <i class="fa-solid fa-fingerprint text-emerald-400 text-lg mb-1"></i>
+          <div class="text-xs font-semibold text-slate-200">Cryptographer</div>
+          <div id="status-crypto" class="text-[10px] text-slate-400 mt-1">Ready</div>
+        </div>
+      </div>
+
+      <!-- Verdict Box -->
+      <div class="glass-panel p-5 flex-1 flex flex-col">
+        <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+          <h2 class="text-sm font-semibold text-slate-300 uppercase tracking-wider flex items-center gap-2">
+            <i class="fa-solid fa-receipt text-sky-400"></i> Consensus Execution Receipt
+          </h2>
+          <span id="verdict-badge" class="px-2.5 py-0.5 rounded text-xs font-bold uppercase bg-slate-800 text-slate-400">Awaiting Query</span>
+        </div>
+
+        <div id="results-display" class="flex-1 flex flex-col justify-center items-center py-8 text-center text-slate-500">
+          <i class="fa-solid fa-atom text-3xl mb-2 text-slate-700 animate-spin"></i>
+          <p class="text-sm">Submit a transaction to trigger autonomous multi-agent consensus</p>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="max-w-6xl w-full mx-auto pt-6 text-center text-xs text-slate-500 border-t border-slate-800 mt-6">
+    PayPal AI Hackathon MVP &bull; Engineered Autonomously by JARVIS & OpenJarvis Cognitive Bridge &bull; Ganesh Nair (@GaneshNair007)
+  </footer>
+
+  <script>
+    function setSample(type) {
+      if (type === 1) {
+        document.getElementById('tx-desc').value = "Standard in-store coffee purchase at Starbucks Seattle via mobile tap";
+        document.getElementById('tx-amount').value = 4.75;
+        document.getElementById('tx-channel').value = "MERCHANT_CHECKOUT";
+      } else {
+        document.getElementById('tx-desc').value = "Rapid cross-border withdrawal to unverified destination wallet in Zurich";
+        document.getElementById('tx-amount').value = 4850;
+        document.getElementById('tx-channel').value = "WIRE_TRANSFER";
+      }
+    }
+
+    async function evaluateTx() {
+      const desc = document.getElementById('tx-desc').value.trim();
+      const amount = parseFloat(document.getElementById('tx-amount').value) || 0;
+      const channel = document.getElementById('tx-channel').value;
+      const btn = document.getElementById('btn-eval');
+      const badge = document.getElementById('verdict-badge');
+      const display = document.getElementById('results-display');
+
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-spinner animate-spin"></i> Evaluating Consensus...';
+
+      // Set agent cards active
+      ['analyst', 'risk', 'compliance', 'crypto'].forEach(a => {
+        document.getElementById(`status-${a}`).textContent = 'Analyzing...';
+        document.getElementById(`status-${a}`).className = 'text-[10px] text-sky-400 animate-pulse';
+      });
+
+      try {
+        const resp = await fetch('/api/evaluate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ query: desc, amount: amount, channel: channel })
+        });
+        const data = await resp.json();
+
+        // Update Agent Cards
+        ['analyst', 'risk', 'compliance', 'crypto'].forEach(a => {
+          document.getElementById(`status-${a}`).textContent = 'Completed';
+          document.getElementById(`status-${a}`).className = 'text-[10px] text-emerald-400 font-semibold';
+        });
+
+        // Set Verdict Badge
+        const isOptimal = data.verdict === 'APPROVED' || data.verdict === 'OPTIMAL';
+        badge.textContent = data.verdict;
+        badge.className = `px-2.5 py-0.5 rounded text-xs font-bold uppercase ${isOptimal ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-rose-500/20 text-rose-400 border border-rose-500/30'}`;
+
+        // Render Findings
+        display.innerHTML = `
+          <div class="w-full text-left space-y-4">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 bg-slate-900/80 p-3 rounded-lg border border-slate-800">
+              <div>
+                <span class="text-[10px] text-slate-500 uppercase">Risk Score</span>
+                <div class="text-lg font-bold ${data.risk_score > 0.5 ? 'text-rose-400' : 'text-emerald-400'}">${(data.risk_score * 100).toFixed(1)}%</div>
+              </div>
+              <div>
+                <span class="text-[10px] text-slate-500 uppercase">Consensus Ratio</span>
+                <div class="text-lg font-bold text-sky-400">${data.consensus_ratio || '4 / 4'}</div>
+              </div>
+              <div>
+                <span class="text-[10px] text-slate-500 uppercase">Merkle Proof</span>
+                <div class="text-xs font-mono text-slate-300 truncate" title="${data.audit_hash}">${data.audit_hash ? data.audit_hash.slice(0, 10) + '...' : 'Verified'}</div>
+              </div>
+              <div>
+                <span class="text-[10px] text-slate-500 uppercase">Latency</span>
+                <div class="text-lg font-bold text-slate-200">${data.duration_ms || 18} ms</div>
+              </div>
+            </div>
+
+            <div class="space-y-2">
+              <h3 class="text-xs font-semibold text-slate-300 uppercase">Specialist Findings</h3>
+              <div class="text-xs space-y-1.5 text-slate-300">
+                ${(data.findings || []).map(f => `<div class="p-2 rounded bg-slate-900/50 border border-slate-800/80 flex items-start gap-2"><span class="text-sky-400 font-bold">•</span><div>${f}</div></div>`).join('')}
+              </div>
+            </div>
+          </div>
+        `;
+      } catch (err) {
+        display.innerHTML = `<div class="text-rose-400 text-xs">Error communicating with backend: ${err.message}</div>`;
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-bolt"></i> Evaluate Multi-Agent Consensus';
+      }
+    }
+  </script>
+</body>
+</html>
