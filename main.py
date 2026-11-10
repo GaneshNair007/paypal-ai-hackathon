@@ -1,6 +1,6 @@
 """
 PayPal AI — Autonomous Multi-Agent Consensus Room
-Production FastAPI Backend Engine
+Production FastAPI Backend Engine with NVIDIA CUDA GPU Acceleration
 """
 
 from __future__ import annotations
@@ -17,10 +17,15 @@ from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
+from core.db import ledger_db
+from core.gpu_engine import gpu_engine
+from core.graph_engine import graph_engine, velocity_tracker
+from core.ml_detector import ml_detector
+
 app = FastAPI(
     title="PayPal AI Consensus Room",
-    description="Verifiable multi-agent transaction fraud evaluation with cryptographic audit trails.",
-    version="1.0.0",
+    description="GPU-accelerated multi-agent transaction fraud evaluation with cryptographic audit trails.",
+    version="2.0.0",
 )
 
 app.add_middleware(
@@ -40,6 +45,8 @@ class TransactionRequest(BaseModel):
     query: str = Field(..., description="Description of the transaction context")
     amount: float = Field(default=0.0, description="Amount in USD")
     channel: str = Field(default="P2P_INSTANT", description="Payment channel identifier")
+    source_user: Optional[str] = "user_primary"
+    destination_user: Optional[str] = "merchant_gateway"
     destination_country: Optional[str] = "US"
 
 
@@ -51,19 +58,10 @@ class ConsensusEvaluationResult(BaseModel):
     consensus_ratio: str
     audit_hash: str
     duration_ms: float
+    gpu_accelerated: bool
+    gpu_telemetry: Dict[str, Any]
     findings: List[str]
     timestamp: float
-
-
-class AuditProof(BaseModel):
-    tx_hash: str
-    previous_hash: str
-    timestamp: float
-    verdict: str
-
-
-# In-memory verifiable ledger of consensus decisions
-LEDGER: List[Dict[str, Any]] = []
 
 
 def calculate_sha256(payload: Dict[str, Any], prev_hash: str = "GENESIS") -> str:
@@ -76,7 +74,7 @@ def serve_index():
     index_file = STATIC_DIR / "index.html"
     if index_file.exists():
         return FileResponse(index_file)
-    return HTMLResponse("<h1>PayPal AI Consensus Room Online</h1>")
+    return HTMLResponse("<h1>PayPal AI Consensus Room Online (GPU Enabled)</h1>")
 
 
 @app.get("/health")
@@ -84,8 +82,10 @@ def health_status():
     return {
         "status": "ONLINE",
         "service": "paypal-ai-consensus-room",
+        "compute_device": gpu_engine.device_name,
+        "cuda_active": gpu_engine.is_cuda,
         "agents": ["AnalystAgent", "RiskOfficerAgent", "ComplianceAgent", "CryptographerAgent"],
-        "ledger_size": len(LEDGER),
+        "persisted_transactions": ledger_db.count_transactions(),
         "timestamp": time.time(),
     }
 
@@ -94,84 +94,99 @@ def health_status():
 def evaluate_transaction(req: TransactionRequest):
     start = time.time()
     findings = []
-    risk_points = 0.0
 
-    # 1. Analyst Agent: Pattern and heuristic evaluation
-    q_lower = req.query.lower()
-    if any(k in q_lower for k in ["cross-border", "zurich", "unverified", "rapid", "anonymous"]):
-        risk_points += 0.35
-        findings.append("Analyst Agent: High-frequency cross-border hop detected in unverified corridor.")
-    else:
-        findings.append("Analyst Agent: Domestic transaction pattern within standard velocity bounds.")
+    # 1. Statistical Feature Extraction
+    features = ml_detector.extract_features(req.model_dump())
+    base_risk, ml_reasons = ml_detector.compute_composite_risk(features)
+    findings.extend(ml_reasons)
 
-    # 2. Risk Officer: Capital exposure evaluation
-    if req.amount > 3000:
-        risk_points += 0.35
-        findings.append(f"Risk Officer: Elevated principal exposure (${req.amount:,.2f} exceeds threshold $3,000.00).")
-    elif req.amount > 500:
-        risk_points += 0.15
-        findings.append(f"Risk Officer: Moderate capital exposure (${req.amount:,.2f}).")
-    else:
-        findings.append(f"Risk Officer: Low capital risk (${req.amount:,.2f} within micro-settlement quota).")
+    # 2. Velocity & Graph Ring Analysis
+    is_breach, vol_sum, ev_count = velocity_tracker.record_and_evaluate(req.source_user or "user", req.amount)
+    if is_breach:
+        findings.append(f"Velocity Breach: Account triggered {ev_count} operations totaling ${vol_sum:,.2f} in 5m.")
 
-    # 3. Compliance Agent: Channel & regulatory scrutiny
-    if req.channel == "WIRE_TRANSFER" and "unverified" in q_lower:
-        risk_points += 0.25
-        findings.append("Compliance Agent: Travel Rule Enhanced Due Diligence (EDD) triggered.")
-    else:
-        findings.append("Compliance Agent: Regulatory sanctions screening cleared (OFAC/FinCEN clean).")
+    graph_engine.record_edge(req.source_user or "user", req.destination_user or "dest", req.amount)
+    cycles = graph_engine.detect_cycles(req.source_user or "user")
+    if cycles:
+        findings.append(f"Graph Intelligence: Circular routing cycle detected ({' -> '.join(cycles[0])}).")
 
-    # 4. Cryptographer Agent: Consensus synthesis & threshold sealing
-    final_risk = min(max(round(risk_points, 3), 0.05), 0.98)
-    if final_risk > 0.65:
+    # 3. GPU CUDA Tensor Cosine Similarity Scoring
+    feature_vec = [
+        features["amount_risk"],
+        features["corridor_risk"],
+        features["channel_risk"],
+        features["narrative_risk"],
+        1.0 if is_breach else 0.0,
+        1.0 if cycles else 0.0,
+    ]
+    gpu_risk, fraud_cluster, gpu_telemetry = gpu_engine.compute_gpu_risk(feature_vec)
+
+    # 4. Multi-Agent Consensus Synthesis
+    composite_risk = round(base_risk * 0.45 + gpu_risk * 0.40 + (0.15 if (is_breach or cycles) else 0.0), 3)
+    composite_risk = min(max(composite_risk, 0.02), 0.99)
+
+    if composite_risk > 0.65:
         verdict = "BLOCKED"
         ratio = "4 / 4 Unanimous Freeze"
-    elif final_risk > 0.35:
+    elif composite_risk > 0.35:
         verdict = "FLAGGED_FOR_REVIEW"
         ratio = "3 / 4 Review Escalation"
     else:
         verdict = "APPROVED"
         ratio = "4 / 4 Optimal Pass"
 
-    prev_hash = LEDGER[-1]["audit_hash"] if LEDGER else "0000000000000000000000000000000000000000000000000000000000000000"
-    audit_data = {
+    # 5. Cryptographic Merkle Sealing & SQLite Persistence
+    recent_txs = ledger_db.list_recent_transactions(limit=1)
+    prev_hash = recent_txs[0]["audit_hash"] if recent_txs else "0000000000000000000000000000000000000000000000000000000000000000"
+
+    audit_payload = {
         "query": req.query,
         "amount": req.amount,
         "channel": req.channel,
         "verdict": verdict,
-        "risk_score": final_risk,
+        "risk_score": composite_risk,
+        "gpu_cluster": fraud_cluster,
     }
-    audit_hash = calculate_sha256(audit_data, prev_hash)
-
-    record = {
-        "id": len(LEDGER) + 1,
-        "audit_hash": audit_hash,
-        "previous_hash": prev_hash,
-        "verdict": verdict,
-        "risk_score": final_risk,
-        "timestamp": time.time(),
-    }
-    LEDGER.append(record)
-    findings.append(f"Cryptographer Agent: Sealed Merkle block #{record['id']} with proof {audit_hash[:16]}...")
+    audit_hash = calculate_sha256(audit_payload, prev_hash)
 
     duration_ms = round((time.time() - start) * 1000, 2)
+
+    ledger_db.insert_transaction(
+        query=req.query,
+        amount=req.amount,
+        channel=req.channel,
+        destination_country=req.destination_country or "US",
+        verdict=verdict,
+        risk_score=composite_risk,
+        consensus_ratio=ratio,
+        audit_hash=audit_hash,
+        duration_ms=duration_ms,
+        findings=findings,
+    )
+
+    findings.append(f"GPU Engine: Classified under cluster '{fraud_cluster}' in {gpu_telemetry['latency_microseconds']}µs.")
 
     return ConsensusEvaluationResult(
         status="PROCESSED",
         query=req.query,
         verdict=verdict,
-        risk_score=final_risk,
+        risk_score=composite_risk,
         consensus_ratio=ratio,
         audit_hash=audit_hash,
         duration_ms=duration_ms,
+        gpu_accelerated=gpu_engine.is_cuda,
+        gpu_telemetry=gpu_telemetry,
         findings=findings,
         timestamp=time.time(),
     )
 
 
 @app.get("/api/audit-log")
-def get_audit_log(limit: int = 10):
-    return {"total_blocks": len(LEDGER), "blocks": LEDGER[-limit:]}
+def get_audit_log(limit: int = 15):
+    return {
+        "total_records": ledger_db.count_transactions(),
+        "recent_transactions": ledger_db.list_recent_transactions(limit=limit),
+    }
 
 
 if __name__ == "__main__":
