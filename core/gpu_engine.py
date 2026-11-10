@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import subprocess
 import time
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 import torch
 
 
@@ -68,6 +68,24 @@ class GPUAnomalyEngine:
             v.append(0.0)
 
         tensor_v = torch.tensor([v], dtype=torch.float32, device=active_device)
+        magnitude = float(torch.norm(tensor_v).item())
+
+        # Baseline check: low anomaly feature magnitude signifies safe retail traffic
+        if magnitude < 0.35:
+            risk_score = round(max(magnitude * 0.45, 0.05), 3)
+            label = "Standard Retail Activity"
+            latency_us = round((time.perf_counter() - start) * 1_000_000, 2)
+            telemetry = {
+                "device": active_device,
+                "device_name": self.device_name if use_gpu else "CPU (Thermal Safe Mode)",
+                "gpu_temperature_celsius": gpu_temp,
+                "thermal_throttled": (gpu_temp is not None and gpu_temp >= self.temp_threshold),
+                "vram_allocated_mb": round(torch.cuda.memory_allocated(0) / (1024 * 1024), 2) if use_gpu else 0.0,
+                "latency_microseconds": latency_us,
+                "fraud_cluster": label,
+            }
+            return risk_score, label, telemetry
+
         norm_v = torch.nn.functional.normalize(tensor_v, p=2, dim=1)
 
         # Batch cosine similarity: (1, 16) x (16, 4) -> (1, 4)
